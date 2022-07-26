@@ -1,0 +1,112 @@
+#define BLYNK_PRINT Serial
+#define BLYNK_TEMPLATE_ID "TMPLZzoi-nak"
+#define BLYNK_DEVICE_NAME "Quickstart Device"
+#define BLYNK_AUTH_TOKEN "-eexKin8BooC-46EzldQUdz4cbPbybLZ"
+#include <OneWire.h>
+#include <BlynkSimpleEsp8266.h>
+#include <DHT.h>
+#include <ESP8266WiFi.h>
+#include <Wire.h>
+#include <DHT.h>
+char auth[] = BLYNK_AUTH_TOKEN;
+char ssid[] = "SANYAM_SINGH 0605";
+char pass[] = "Sanyam123";
+#define DHTPIN D7 // Mention the digital pin where you connected
+#define DHTTYPE DHT11 // DHT 11
+DHT dht(DHTPIN, DHTTYPE);
+BlynkTimer timer;
+int sensor_pin = A0;
+int output_value;
+const int pump = 5; // digital pin where the relay is plugged in
+int threshold = -30; //threshold value to trigger pump
+int cropChoice = 1; //choose the crop
+void sendSensor()
+{
+float h = dht.readHumidity();
+float t = dht.readTemperature(); // or dht.readTemperature(true) for Fahrenheit
+if (isnan(h) || isnan(t))
+{
+Serial.println("Failed to read from DHT sensor!");
+return;
+}
+Serial.println(t);
+int sm = analogRead(sensor_pin);
+sm = map(output_value, 550, 0, 0, 100);
+//Serial.print(output_value);
+Blynk.virtualWrite(V0, output_value);
+Blynk.virtualWrite(V1, t);
+Blynk.virtualWrite(V2, h);
+Serial.print("Temperature : ");
+Serial.print(t);
+Serial.print("Humidity : ");
+Serial.println(h);
+}
+void setup()
+{
+Serial.begin(115200);
+Blynk.begin(auth, ssid, pass);
+dht.begin();
+timer.setInterval(2500 L, sendSensor);
+Serial.println("Select Crop Type");
+Serial.println("1. Wheat");
+Serial.println("2. Rice");
+while (Serial.available() == 0) {}
+cropChoice = Serial.parseInt();
+pinMode(sensor_pin, INPUT); //setup for the soil moisture senor aka INPUt
+pinMode(pump, OUTPUT); //setup for the pump aka OUTPUT
+Serial.println("Initialize pump to off state.");
+delay(20);
+digitalWrite(pump, HIGH);
+delay(10);
+}
+void lo99999999op()
+{
+Blynk.run();
+timer.run();
+sendSensor();
+{
+cropChoice = Serial.parseInt();
+switch (cropChoice)
+{
+
+case 1:
+// wheat
+Serial.print("Wheat Selected\n");
+threshold = -30;
+break;
+
+case 2:
+// rice
+17
+Serial.print("Rice Selected\n");
+threshold = -50;
+break;
+default:
+break;
+}
+
+output_value = analogRead(sensor_pin);
+output_value = map(output_value, 550, 0, 0, 100);
+Serial.print("Moisture : ");
+Serial.print(output_value);
+Serial.println("%");
+//watering code
+if (output_value < threshold) //if the soil is dry then turn on pump
+{
+digitalWrite(pump, HIGH);
+Serial.println("pump on");
+delay(5000); //run pump for 5 second;
+digitalWrite(pump, LOW);
+Serial.println("pump off");
+delay(4000); //wait 4 secondS.
+String start = "Moisture Reading = ";
+String end = "%";
+} else
+{
+digitalWrite(pump, LOW);
+Serial.println("do not turn on pump");
+delay(1000); // wait 1 second. This is for testing, uncomment the
+line above when implementing
+}
+delay(2000); //wait 30 minutes before checking again
+}
